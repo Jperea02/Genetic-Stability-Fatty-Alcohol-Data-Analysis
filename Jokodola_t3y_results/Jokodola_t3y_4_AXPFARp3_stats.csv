@@ -1,9 +1,3 @@
-Low-confidence positions:
-pos,ref,reads_all,matches,mismatches,deletions,insertions,A,C,T,G
-
-
-
-All positions:
 pos,ref,reads_all,matches,mismatches,deletions,insertions,A,C,T,G
 1,T,609,609,0,0,0,0,0,609,0
 2,C,612,612,0,0,0,0,612,0,0
