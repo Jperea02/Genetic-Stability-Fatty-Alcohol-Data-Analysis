@@ -1,0 +1,79 @@
+---
+title: "Nanopore Mutation Analysis"
+author: "Jeniffer Perea-Lopez"
+date: "2023-07-17"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+-   Mutation analysis of Oxford nanopore sequencing data for mismatches, insertions and deletions in AXP::FAR region
+
+-   Strains: YL AXP::FAR-GFP-URA3-loxP in YPA+25% Illinois oilcane juice
+
+-   Passages 3-5
+
+```{r}
+#Load applicable packages
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(reshape2)
+library(patchwork)
+library(plotly)
+library(quantmod)
+```
+
+```{r}
+#import .fastq file with raw reads 
+AXPFAR_p3 <- read.csv("https://raw.githubusercontent.com/Jperea02/Genetic-Stability-Fatty-Alcohol-Data-Analysis/main/Jokodola_H3P_1_AXPFAR_p3_stats.csv")
+AXPFAR_p4 <- read.csv("https://raw.githubusercontent.com/Jperea02/Genetic-Stability-Fatty-Alcohol-Data-Analysis/main/Jokodola_H3P_2_AXPFAR_p4_stats.csv")
+AXPFAR_p5 <- read.csv("https://raw.githubusercontent.com/Jperea02/Genetic-Stability-Fatty-Alcohol-Data-Analysis/main/Jokodola_H3P_3_AXPFAR_p5_stats.csv")
+```
+
+```{r}
+#Calculating mutation frequency at each position
+
+#Passage 3:
+matches_reads_p3 <- AXPFAR_p3[,4]/AXPFAR_p3[,3]
+mismatches_reads_p3 <- AXPFAR_p3[,5]/AXPFAR_p3[,3]
+deletions_reads_p3 <- AXPFAR_p3[,6]/AXPFAR_p3[,3]
+insertions_reads_p3 <- AXPFAR_p3[,7]/AXPFAR_p3[,3]
+
+AXPFAR_p3[c('matches_reads', 'mismatches_reads', 'deletions_reads', 'insertions_reads')] <- NA
+AXPFAR_p3$matches_reads <- matches_reads_p3
+AXPFAR_p3$mismatches_reads <- mismatches_reads_p3
+AXPFAR_p3$deletions_reads <- deletions_reads_p3
+AXPFAR_p3$insertions_reads <- insertions_reads_p3
+
+Passage3 <- AXPFAR_p3[,c(1,12:15)]
+df_p3 <- melt(data = Passage3, id.vars = "pos")
+p3 <- ggplot(df_p3, aes(fill=variable, y=value, x=pos)) + 
+    geom_bar(position="stack", stat="identity") + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"))
+
+fig <- plot_ly(Passage3, x = ~pos, y = ~matches_reads, type = 'bar', name = 'matches_reads')
+fig <- fig %>% add_trace(y = ~mismatches_reads, name = 'mismatches_reads')
+fig <- fig %>% add_trace(y = ~deletions_reads, name = 'deletions_reads')
+fig <- fig %>% add_trace(y = ~insertions_reads, name = 'insertions_reads')
+fig <- fig %>% layout(yaxis = list(title = 'Fraction of total reads'), xaxis = list(title = 'Position'), barmode = 'stack')
+fig <- fig %>% layout(xaxis = list(rangeslider = list(type = "Position")))
+fig
+
+#features1 <- tribble(~"feature", ~"start", ~"end",
+                    # "pex20t", 97, 428,
+                    # "MhFAR", 429, 1967,
+                    # "pTEF1in", 1968, 2498)
+#f1 <- features1 %>%
+ # ggplot() +
+ # geom_rect(aes(xmin = start, xmax = end, 
+                  # ymin = 0, ymax = 1,
+                  # fill = feature),
+           # color = "black") +
+ # geom_text(aes(x = (start + end) / 2, y = 0.5, label = feature)) +
+ # theme_void() +
+ # theme(legend.position = "none")
+
+#p3/f1 + plot_layout(nrow = 3, heights = c(1, 0.1, 0.1))
+```
